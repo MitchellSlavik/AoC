@@ -17,8 +17,14 @@ const part2 = (rawInput: string) => {
   const input = parseInput(rawInput);
 
   const reverse = (text: string) => {
-    return text.split("").reverse().join("")
+    if(text.length < 2){
+      return text;
+    }
+    return text.split("").reverse().join("");
   }
+
+  const reg = new RegExp("([0-9]|one|two|three|four|five|six|seven|eight|nine)", "g");
+  const reversedReg = new RegExp("([0-9]|"+reverse("one|two|three|four|five|six|seven|eight|nine") + ")", "g");
 
   const getDigit = (text: string) => {
     switch(text) {
@@ -46,12 +52,7 @@ const part2 = (rawInput: string) => {
   }
 
   const sum = input.split("\n").map((line) => {
-    const matches1 = line.match(new RegExp("([0-9]|one|two|three|four|five|six|seven|eight|nine)", "g"));
-    const matches2 = reverse(line).match(new RegExp("([0-9]|"+reverse("one|two|three|four|five|six|seven|eight|nine") + ")", "g"));
-    // console.log("-------------")
-    // console.log(matches1, matches2);
-    // console.log(Number(getDigit(matches1[0]) + getDigit(reverse(matches2[0]))));
-    return Number(getDigit(matches1[0]) + getDigit(reverse(matches2[0])));
+    return Number(getDigit(line.match(reg)[0]) + getDigit(reverse(reverse(line).match(reversedReg)[0])));
   }).reduce((prev, curr) => prev + curr, 0);
 
   return sum;
