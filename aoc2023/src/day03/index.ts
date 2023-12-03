@@ -169,7 +169,7 @@ const part2 = (rawInput: string) => {
       }
 
       if (adjacentNumbers === 2) {
-        console.log(value, index, matchIndex, nums)
+        // console.log(value, index, matchIndex, nums)
         sum += value;
       }
     })
