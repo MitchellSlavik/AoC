@@ -5,7 +5,10 @@ const parseInput = (rawInput: string) => rawInput;
 const part1 = (rawInput: string) => {
   const input = parseInput(rawInput);
 
-  return;
+  return input.split("\n").map((line) => {
+    
+    return 0;
+  }).reduce((prev, curr) => prev + curr, 0);
 };
 
 const part2 = (rawInput: string) => {
