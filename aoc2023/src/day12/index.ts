@@ -1,168 +1,72 @@
 import run from "aocrunner";
 
-const parseInput = (rawInput: string) => rawInput;
-
-const enumerateOptions = (s: string): string[] => {
-  if (s.includes("?")) {
-    return [
-      ...enumerateOptions(s.replace("?", ".")),
-      ...enumerateOptions(s.replace("?", "#")),
-    ];
-  }
-  return [s];
-};
-
-const arrEqual = (a: any[], b: any[]) => {
-  if (a.length === b.length) {
-    return !a.some((z, i) => z !== b[i]);
-  }
-  return false;
-};
+const parseInput = (rawInput: string) => rawInput.split("\n");
 
 let cache = {};
 
-const def = (s: string, numArr: number[]) => {
+const cacheCombinations = (s: string, numArr: number[]) => {
   let key = s + numArr.join(",");
   if (cache[key] !== undefined) {
     return cache[key];
   }
-  cache[key] = abc(s, numArr);
+  cache[key] = findCombinations(s, numArr);
   return cache[key];
 };
 
-//`??????????? 8,1`
-const abc = (s: string, numArr: number[]) => {
-  // console.log(s, numArr);
+const findCombinations = (s: string, numArr: number[]) => {
   if (numArr.length === 0) {
     if (s.replace(new RegExp("(\\.|\\?)", "g"), "").length === 0) {
-      //console.log(s, numArr, 1);
       return 1;
     }
-    //console.log(s, numArr, 0);
-    return 0;
-  }
-  if (s.match(new RegExp(`^(\\#|\\?){${numArr[0]}}`))) {
-    if (
-      s.substring(numArr[0]).startsWith("?") ||
-      s.substring(numArr[0]).startsWith(".")
-    ) {
-      let r =
-        def(s.substring(numArr[0] + 1), numArr.slice(1)) +
-        (s.startsWith("#") ? 0 : def(s.substring(1), numArr));
-      //console.log(s, numArr, r);
-      return r;
-    } else if (s.substring(numArr[0]).startsWith("#")) {
-      let r = s.startsWith("#") ? 0 : def(s.substring(1), numArr);
-      // console.log(s, numArr, r);
-      return r;
-    } else if (s.substring(numArr[0]).length === 0) {
-      if (numArr.length === 1) {
-        let r = 1;
-        // console.log(s, numArr, r);
-        return r;
-      } else {
-        let r = 0;
-        // console.log(s, numArr, r);
-        return r;
-      }
+  } else if (s.match(new RegExp(`^(\\#|\\?){${numArr[0]}}`))) {
+    const afterMatch = s.substring(numArr[0]);
+    if (afterMatch.startsWith("?") || afterMatch.startsWith(".")) {
+      return (
+        cacheCombinations(afterMatch.substring(1), numArr.slice(1)) +
+        (s.startsWith("#") ? 0 : cacheCombinations(s.substring(1), numArr))
+      );
+    } else if (afterMatch.startsWith("#")) {
+      return s.startsWith("#") ? 0 : cacheCombinations(s.substring(1), numArr);
+    } else if (afterMatch.length === 0 && numArr.length === 1) {
+      return 1;
     }
   } else if (s.startsWith(".")) {
-    let nextStr = s;
-    while (nextStr.startsWith(".")) {
-      nextStr = nextStr.substring(1);
-    }
-    let r = def(nextStr, numArr);
-    // console.log(s, numArr, r);
-    return r;
+    return cacheCombinations(s.replace(new RegExp("^\\.+", "g"), ""), numArr);
   } else if (s.startsWith("?")) {
-    let nextStr = s;
-    while (nextStr.startsWith("?")) {
-      nextStr = nextStr.substring(1);
-    }
-    let r = def(nextStr, numArr);
-    // console.log(s, numArr, r);
-    return r;
+    return cacheCombinations(s.replace(new RegExp("^\\?+", "g"), ""), numArr);
   }
-  // console.log(s, numArr, 0);
   return 0;
 };
 
 const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  return input
-    .split("\n")
+  return parseInput(rawInput)
     .map((line) => {
       const [rest, groups] = line.split(" ");
-      const groupNums = groups.split(",").map((s) => Number(s));
       cache = {};
-      return abc(rest, groupNums);
-
-      const options = enumerateOptions(rest);
-
-      return options
-        .map((s) => {
-          return arrEqual(
-            [...s.matchAll(new RegExp("#+", "g"))].map((a) => a[0].length),
-            groupNums
-          )
-            ? 1
-            : 0;
-        })
-        .reduce((prev, curr) => prev + curr, 0);
+      return findCombinations(
+        rest,
+        groups.split(",").map((s) => Number(s))
+      );
     })
     .reduce((prev, curr) => prev + curr, 0);
 };
 
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  return input
-    .split("\n")
-    .map((line, index) => {
+  return parseInput(rawInput)
+    .map((line) => {
       const [rest, groups] = line.split(" ");
-      const groupNums = new Array(5)
-        .fill(groups)
-        .join(",")
-        .split(",")
-        .map((s) => Number(s));
       cache = {};
-      const options = abc(new Array(5).fill(rest).join("?"), groupNums);
-      // console.log(index, line, options);
-      return options;
+      return findCombinations(
+        new Array(5).fill(rest).join("?"),
+        new Array(5)
+          .fill(groups)
+          .join(",")
+          .split(",")
+          .map((s) => Number(s))
+      );
     })
     .reduce((prev, curr) => prev + curr, 0);
 };
-
-/*
-const input = parseInput(rawInput);
-
-  return input.split("\n").map((line) => {
-    const [rest, groups] = line.split(" ");
-    const groupNums = groups.split(",").map((s) => Number(s));
-    const options = enumerateOptions(rest);
-
-    let a = options.map((s) => {
-       return arrEqual([...s.matchAll(new RegExp("#+", "g"))].map((a) => a[0].length), groupNums) ? 1 : 0
-    }).reduce((prev, curr) => prev + curr, 0);
-
-    let b = rest.startsWith("#") ? a : enumerateOptions(rest+ "?").map((s) => {
-       return arrEqual([...s.matchAll(new RegExp("#+", "g"))].map((a) => a[0].length), groupNums) ? 1 : 0
-    }).reduce((prev, curr) => prev + curr, 0);
-
-    let c = rest.endsWith("#") ? a : enumerateOptions("?"+ rest).map((s) => {
-       return arrEqual([...s.matchAll(new RegExp("#+", "g"))].map((a) => a[0].length), groupNums) ? 1 : 0
-    }).reduce((prev, curr) => prev + curr, 0);
-
-    // console.log("a", a, "b", b, "c", c);
-
-    if(b > c) {
-        return Math.pow(b, 4)*a;
-    } else {
-        return Math.pow(c, 4)*a;
-    }
-  }).reduce((prev, curr) => prev + curr, 0);
-  */
 
 const input = `???.### 1,1,3
 .??..??...?##. 1,1,3
@@ -170,19 +74,6 @@ const input = `???.### 1,1,3
 ????.#...#... 4,1,1
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1`;
-
-// const input = `?###???????? 3,2,1`;
-// const input = `???????###???????? 3,2,1`;
-
-/*
-?###???????? 3,2,1=> 0
- ###???????? 3,2,1=> ?
-     ??????? 2,1=> 4
-        ???? 1=> 4
-      ?????? 2,1=> 6
-       ????? 2,1=> 3
-        ???? 2,1=> 1
-*/
 
 run({
   part1: {
