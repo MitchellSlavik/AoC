@@ -1,23 +1,22 @@
 export const MinHeap = {
-  siftDown(h, i = 0, v = h[i]) {
-    if (i < h.length) {
-      let k = v[0];
+  siftDown(heap, i = 0, [key, ...rest] = heap[i]) {
+    if (i < heap.length) {
       while (1) {
         let j = i * 2 + 1;
-        if (j + 1 < h.length && h[j][0] > h[j + 1][0]) j++;
-        if (j >= h.length || k <= h[j][0]) break;
-        h[i] = h[j];
+        if (j + 1 < heap.length && heap[j][0] > heap[j + 1][0]) j++;
+        if (j >= heap.length || key <= heap[j][0]) break;
+        heap[i] = heap[j];
         i = j;
       }
-      h[i] = v;
+      heap[i] = [key, ...rest];
     }
   },
-  heapify(h) {
-    for (let i = h.length >> 1; i--; ) this.siftDown(h, i);
-    return h;
+  heapify(heap) {
+    for (let i = heap.length >> 1; i--; ) this.siftDown(heap, i);
+    return heap;
   },
-  pop(h) {
-    return this.exchange(h, h.pop());
+  pop(heap) {
+    return this.exchange(heap, heap.pop());
   },
   exchange(h, v) {
     if (!h.length) return v;
@@ -25,15 +24,15 @@ export const MinHeap = {
     this.siftDown(h, 0, v);
     return w;
   },
-  push(h, v) {
-    let k = v[0],
-      i = h.length,
-      j;
-    while ((j = (i - 1) >> 1) >= 0 && k < h[j][0]) {
-      h[i] = h[j];
+  push(heap, [key, ...rest]) {
+    let i = heap.length;
+    let j = (i - 1) >> 1;
+    while (j >= 0 && key < heap[j][0]) {
+      heap[i] = heap[j];
       i = j;
+      j = (i - 1) >> 1;
     }
-    h[i] = v;
-    return h;
+    heap[i] = [key, ...rest];
+    return heap;
   },
 };

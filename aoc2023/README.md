@@ -181,9 +181,9 @@ Both parts: 130.286ms
 
 ```
 Day 17
-Time part 1: 290.12ms
-Time part 2: 1003.346ms
-Both parts: 1293.466ms
+Time part 1: 248.403ms
+Time part 2: 823.273ms
+Both parts: 1071.675ms
 ```
 
 ```
@@ -244,7 +244,7 @@ Both parts: -
 
 ```
 Total stars: 34/50
-Total time: 29318.891ms
+Total time: 29097.1ms
 ```
 
 <!--/RESULTS-->

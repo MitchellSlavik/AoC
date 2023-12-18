@@ -32,16 +32,17 @@ const solve = (
     ) {
       return energy;
     }
-    DIR.map((direction, heading) => [
-      direction,
+    DIR.map(([dx, dy], heading) => [
+      [currX + dx, currY + dy],
       heading,
       heading === currHeading ? currSteps + 1 : 1,
     ])
-      .map(([[dx, dy], ...rest]) => [[currX + dx, currY + dy], ...rest])
       .filter(
-        ([[x, y], heading]) => grid[y]?.[x] && (heading + 2) % 4 !== currHeading
+        ([[x, y], heading, steps]) =>
+          grid[y]?.[x] &&
+          (heading + 2) % 4 !== currHeading &&
+          condition(currSteps, steps)
       )
-      .filter(([, , steps]) => condition(currSteps, steps))
       .map(([[x, y], heading, steps]) => [
         energy + grid[y][x],
         [x, y],
@@ -67,20 +68,14 @@ const solve = (
   return -1;
 };
 
-const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
+const part1 = (rawInput: string) =>
+  solve(parseInput(rawInput), (_, steps) => steps < 4);
 
-  return solve(input, (_, steps) => steps < 4);
-};
-
-const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  return solve(
-    input,
+const part2 = (rawInput: string) =>
+  solve(
+    parseInput(rawInput),
     (prevSteps, steps) => (steps > prevSteps || prevSteps >= 4) && steps < 11
   );
-};
 
 const input = `
 2413432311323
