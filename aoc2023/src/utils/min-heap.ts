@@ -18,10 +18,10 @@ export const MinHeap = {
   pop(heap) {
     return this.exchange(heap, heap.pop());
   },
-  exchange(h, v) {
-    if (!h.length) return v;
-    let w = h[0];
-    this.siftDown(h, 0, v);
+  exchange(heap, value) {
+    if (!heap.length) return value;
+    let w = heap[0];
+    this.siftDown(heap, 0, value);
     return w;
   },
   push(heap, [key, ...rest]) {

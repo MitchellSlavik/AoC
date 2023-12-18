@@ -23,47 +23,39 @@ const solve = (
     [0, 0, [0, 0], 2, 0],
   ];
   while (queue.length) {
-    const [, energy, [currX, currY], currHeading, currSteps] =
+    const [, currHeat, [currX, currY], currHeading, currSteps] =
       MinHeap.pop(queue);
     if (
       currX === targetX &&
       currY === targetY &&
       condition(currSteps, currSteps)
     ) {
-      return energy;
+      return currHeat;
     }
-    DIR.map(([dx, dy], heading) => [
-      [currX + dx, currY + dy],
-      heading,
-      heading === currHeading ? currSteps + 1 : 1,
-    ])
-      .filter(
-        ([[x, y], heading, steps]) =>
-          grid[y]?.[x] &&
-          (heading + 2) % 4 !== currHeading &&
-          condition(currSteps, steps)
-      )
-      .map(([[x, y], heading, steps]) => [
-        energy + grid[y][x],
-        [x, y],
-        heading,
-        steps,
-      ])
-      .filter(
-        ([newEnergy, [x, y], heading, steps]) =>
+    for (let heading = 0; heading < DIR.length; heading++) {
+      const [x, y] = [currX + DIR[heading][0], currY + DIR[heading][1]];
+      const steps = heading === currHeading ? currSteps + 1 : 1;
+      if (
+        grid[y]?.[x] &&
+        (heading + 2) % 4 !== currHeading &&
+        condition(currSteps, steps)
+      ) {
+        const heat = currHeat + grid[y][x];
+        if (
           (visited.get((y << 16) | (x << 8) | (heading << 4) | steps) ??
-            Infinity) > newEnergy &&
-          visited.set((y << 16) | (x << 8) | (heading << 4) | steps, newEnergy)
-      )
-      .forEach(([newEnergy, [newX, newY], h, steps]) =>
-        MinHeap.push(queue, [
-          newEnergy + (targetX - newX) + (targetY - newY),
-          newEnergy,
-          [newX, newY],
-          h,
-          steps,
-        ])
-      );
+            Infinity) > heat
+        ) {
+          visited.set((y << 16) | (x << 8) | (heading << 4) | steps, heat);
+          MinHeap.push(queue, [
+            heat + (targetX - x) + (targetY - y),
+            heat,
+            [x, y],
+            heading,
+            steps,
+          ]);
+        }
+      }
+    }
   }
   return -1;
 };
