@@ -1,9 +1,6 @@
 import run from "aocrunner";
-import fs from "node:fs";
 
 const parseInput = (rawInput: string) => rawInput;
-
-const gridSize = 1000;
 
 type Direction = "U" | "D" | "L" | "R";
 
@@ -37,17 +34,15 @@ const areaFromPlans = (plans: Plan[]): number => {
     coords.push([currX, currY]);
   });
 
-  return (
-    (Math.abs(
+  const shoelaceArea =
+    Math.abs(
       coords.reduce((prev, curr, index, arr) => {
         let p2 = index === arr.length - 1 ? arr[0] : arr[index + 1];
         return prev + curr[0] * p2[1] - curr[1] * p2[0];
       }, 0)
-    ) +
-      acc) *
-      0.5 +
-    1
-  );
+    ) * 0.5;
+
+  return shoelaceArea + acc * 0.5 + 1;
 };
 
 const part1 = (rawInput: string) => {
