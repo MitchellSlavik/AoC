@@ -29,3 +29,4 @@
  *     import { myUtil } from '../utils'
  *
  */
+export { MinHeap } from "./min-heap.js";
