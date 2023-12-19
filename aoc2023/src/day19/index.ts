@@ -1,27 +1,18 @@
 import run from "aocrunner";
 
-const parseInput = (rawInput: string) => rawInput;
-
-interface Step {
-  condition?: string;
-  result: string;
-}
-
 interface Condition {
-  label: string;
+  propName: string;
   lt: boolean;
   gt: boolean;
   value: number;
 }
 
-interface StepP2 {
+interface Step {
   condition?: Condition;
   result: string;
 }
 
 type Workflows = Record<string, Array<Step>>;
-
-type WorkflowsP2 = Record<string, Array<StepP2>>;
 
 interface Part {
   a: number;
@@ -41,72 +32,76 @@ interface PartRange {
   sMax: number;
 }
 
-const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  const [workflowsS, partsS] = input.split("\n\n");
+const parseInput = (rawInput: string): [Workflows, Part[]] => {
+  const [workflowsS, partsS] = rawInput.split("\n\n");
 
   const workflows = workflowsS.split("\n").reduce((prev, line) => {
     const [id, workflowS] = line.substring(0, line.length - 1).split("{");
-    const stepsS = workflowS.split(",");
 
-    const steps = stepsS.map<Step>((step) => {
+    prev[id] = workflowS.split(",").map<Step>((step) => {
       if (!step.includes(":")) {
         return {
           result: step,
         };
       } else {
+        const [cond, result] = step.split(":");
+        const [label, number] = cond.split(new RegExp("\\<|\\>", "g"));
         return {
-          result: step.split(":")[1],
-          condition: step.split(":")[0],
+          result,
+          condition: {
+            propName: label,
+            lt: cond.includes("<"),
+            gt: cond.includes(">"),
+            value: Number(number),
+          },
         };
       }
     });
 
-    prev[id] = steps;
-
     return prev;
   }, {} as Workflows);
 
-  return partsS
-    .split("\n")
-    .map((line) => {
-      const properties = line.substring(1, line.length - 1).split(",");
-
-      const part = properties.reduce((prev, curr) => {
+  const parts = partsS.split("\n").map((line) =>
+    line
+      .substring(1, line.length - 1)
+      .split(",")
+      .reduce((prev, curr) => {
         const [label, value] = curr.split("=");
         prev[label] = Number(value);
         return prev;
-      }, {} as Part);
+      }, {} as Part)
+  );
 
+  return [workflows, parts];
+};
+
+const part1 = (rawInput: string) => {
+  const [workflows, parts] = parseInput(rawInput);
+
+  return parts
+    .map((part) => {
       let currentWorkflow = "in";
-
       while (currentWorkflow !== "A" && currentWorkflow !== "R") {
         const steps = workflows[currentWorkflow];
-
         for (let i = 0; i < steps.length; i++) {
-          if (steps[i].condition) {
-            const r = eval(`part.${steps[i].condition}`);
-            if (r === true) {
-              currentWorkflow = steps[i].result;
-              break;
-            }
-          } else {
-            currentWorkflow = steps[i].result;
+          const { condition, result } = steps[i];
+          if (
+            !condition ||
+            eval(
+              `part.${condition.propName}${condition.lt ? "<" : ">"}${
+                condition.value
+              }`
+            ) === true
+          ) {
+            currentWorkflow = result;
             break;
           }
         }
       }
-
-      if (currentWorkflow === "A") {
-        return part.a + part.m + part.s + part.x;
-      }
-      return 0;
+      return currentWorkflow === "A" ? part.a + part.m + part.s + part.x : 0;
     })
     .reduce((prev, curr) => prev + curr, 0);
 };
-
-let workflowsP2: WorkflowsP2 = {};
 
 const partRangeCombos = (pr: PartRange) =>
   (pr.aMax - pr.aMin + 1) *
@@ -114,7 +109,11 @@ const partRangeCombos = (pr: PartRange) =>
   (pr.sMax - pr.sMin + 1) *
   (pr.xMax - pr.xMin + 1);
 
-const handlePartRange = (workflow: string, partRange: PartRange) => {
+const handlePartRange = (
+  workflows: Workflows,
+  workflow: string,
+  partRange: PartRange
+) => {
   if (workflow === "R") {
     return 0;
   }
@@ -123,95 +122,65 @@ const handlePartRange = (workflow: string, partRange: PartRange) => {
   }
 
   let remainingPartRange = partRange;
-  const steps = workflowsP2[workflow];
+  const steps = workflows[workflow];
   let acc = 0;
 
   for (let i = 0; i < steps.length; i++) {
-    if (steps[i].condition) {
-      const condition = steps[i].condition;
-      if (condition.value < remainingPartRange[condition.label + "Min"]) {
-        if (condition.lt) {
-          continue;
-        } else if (condition.gt) {
-          return acc + handlePartRange(steps[i].result, remainingPartRange);
+    const c = steps[i].condition;
+    if (c) {
+      if (c.value < remainingPartRange[c.propName + "Min"]) {
+        if (c.gt) {
+          acc += handlePartRange(
+            workflows,
+            steps[i].result,
+            remainingPartRange
+          );
+          break;
         }
-      } else if (
-        condition.value > remainingPartRange[condition.label + "Max"]
-      ) {
-        if (condition.lt) {
-          return acc + handlePartRange(steps[i].result, remainingPartRange);
-        } else if (condition.gt) {
-          continue;
+      } else if (c.value > remainingPartRange[c.propName + "Max"]) {
+        if (c.lt) {
+          acc += handlePartRange(
+            workflows,
+            steps[i].result,
+            remainingPartRange
+          );
+          break;
         }
       } else {
-        if (condition.gt) {
+        if (c.gt) {
           let range1 = {
             ...remainingPartRange,
-            [condition.label + "Max"]: condition.value,
+            [c.propName + "Max"]: c.value,
           };
           let range2 = {
             ...remainingPartRange,
-            [condition.label + "Min"]: condition.value + 1,
+            [c.propName + "Min"]: c.value + 1,
           };
           remainingPartRange = range1;
-          acc += handlePartRange(steps[i].result, range2);
-        } else if (condition.lt) {
+          acc += handlePartRange(workflows, steps[i].result, range2);
+        } else if (c.lt) {
           let range1 = {
             ...remainingPartRange,
-            [condition.label + "Max"]: condition.value - 1,
+            [c.propName + "Max"]: c.value - 1,
           };
           let range2 = {
             ...remainingPartRange,
-            [condition.label + "Min"]: condition.value,
+            [c.propName + "Min"]: c.value,
           };
           remainingPartRange = range2;
-          acc += handlePartRange(steps[i].result, range1);
+          acc += handlePartRange(workflows, steps[i].result, range1);
         }
       }
     } else {
-      acc += handlePartRange(steps[i].result, remainingPartRange);
+      acc += handlePartRange(workflows, steps[i].result, remainingPartRange);
     }
   }
 
   return acc;
 };
 
-const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  workflowsP2 = input
-    .split("\n\n")[0]
-    .split("\n")
-    .reduce((prev, line) => {
-      const [id, workflowS] = line.substring(0, line.length - 1).split("{");
-      const stepsS = workflowS.split(",");
-
-      const steps = stepsS.map<StepP2>((step) => {
-        if (!step.includes(":")) {
-          return {
-            result: step,
-          };
-        } else {
-          const [cond, result] = step.split(":");
-          const [label, number] = cond.split(new RegExp("\\<|\\>", "g"));
-          return {
-            result,
-            condition: {
-              label,
-              lt: cond.includes("<"),
-              gt: cond.includes(">"),
-              value: Number(number),
-            },
-          };
-        }
-      });
-
-      prev[id] = steps;
-
-      return prev;
-    }, {} as WorkflowsP2);
-
-  return handlePartRange("in", {
+const part2 = (rawInput: string) =>
+  handlePartRange(parseInput(rawInput)[0], "in", {
     aMax: 4000,
     aMin: 1,
     mMax: 4000,
@@ -221,7 +190,6 @@ const part2 = (rawInput: string) => {
     xMax: 4000,
     xMin: 1,
   });
-};
 
 const input = `
 px{a<2006:qkq,m>2090:A,rfg}

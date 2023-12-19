@@ -41,11 +41,9 @@ const solve = (
         condition(currSteps, steps)
       ) {
         const heat = currHeat + grid[y][x];
-        if (
-          (visited.get((y << 16) | (x << 8) | (heading << 4) | steps) ??
-            Infinity) > heat
-        ) {
-          visited.set((y << 16) | (x << 8) | (heading << 4) | steps, heat);
+        const key = (y << 16) | (x << 8) | (heading << 4) | steps;
+        if ((visited.get(key) ?? Infinity) > heat) {
+          visited.set(key, heat);
           MinHeap.push(queue, [
             heat + (targetX - x) + (targetY - y),
             heat,
