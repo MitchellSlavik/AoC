@@ -167,37 +167,39 @@ const resetModules = (modules: Record<string, Module>) => {
 const part2 = (rawInput: string) => {
   const modules = parseInput(rawInput);
 
-  const lastModule =
-    modules[
-      Object.keys(modules).find((key) => modules[key].outputIds.includes("rx"))
-    ];
+  const cycleInterval = modules[
+    Object.keys(modules).find((key) => modules[key].outputIds.includes("rx"))
+  ].inputIds.reduce(
+    (prev, id) => ({ ...prev, [id]: 0 }),
+    {} as Record<string, number>
+  );
 
-  return lastModule.inputIds
-    .map((subSectionId) => {
-      resetModules(modules);
-      let queue: Pulse[] = [];
+  let queue: Pulse[] = [];
 
-      let buttonPushes = 0;
-      while (true) {
-        buttonPushes++;
-        queue.push({ from: "button", strength: "low", to: "broadcaster" });
+  let buttonPresses = 0;
+  while (true) {
+    buttonPresses++;
+    queue.push({ from: "button", strength: "low", to: "broadcaster" });
 
-        while (queue.length) {
-          const pulse = queue.shift();
+    while (queue.length) {
+      const pulse = queue.shift();
 
-          if (pulse.to === subSectionId && pulse.strength === "low") {
-            return buttonPushes;
-          }
-
-          const module = modules[pulse.to];
-
-          if (module) {
-            queue.push(...handleModulePulse(module, pulse));
-          }
+      if (pulse.strength === "low" && cycleInterval[pulse.to] === 0) {
+        cycleInterval[pulse.to] = buttonPresses;
+        if (!Object.keys(cycleInterval).some((k) => cycleInterval[k] === 0)) {
+          return Object.keys(cycleInterval)
+            .map((k) => cycleInterval[k])
+            .reduce(lcm, 1);
         }
       }
-    })
-    .reduce(lcm, 1);
+
+      const module = modules[pulse.to];
+
+      if (module) {
+        queue.push(...handleModulePulse(module, pulse));
+      }
+    }
+  }
 };
 
 run({
