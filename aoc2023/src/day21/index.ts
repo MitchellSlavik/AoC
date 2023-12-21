@@ -1,9 +1,5 @@
 import run from "aocrunner";
 
-const parseInput = (rawInput: string) => rawInput;
-
-const MAX_STEPS = 64;
-
 const add = (
   arr: Record<string, boolean>,
   ele: [number, number],
@@ -26,29 +22,19 @@ const add = (
   arr[toKey(ele)] = false;
 };
 
-const toKey = (ele: [number, number]) => ele.join(",");
-const fromKey = (key: string) => key.split(",").map(Number) as [number, number];
-
-const part1 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  let startY = 0,
-    startX = 0;
-
-  const grid = input.split("\n").map((line, index) => {
-    if (line.includes("S")) {
-      startX = line.indexOf("S");
-      startY = index;
-    }
-
-    return line.split("");
-  });
-
+const runSteps = (
+  grid: string[][],
+  startX: number,
+  startY: number,
+  stepsToTake: number
+) => {
   let locations: [number, number][] = [[startX, startY]];
-  let nextLocations: Record<string, boolean> = {};
-
+  let nextLocations: Record<string, boolean>;
+  let oddSteps: Record<string, boolean> = {};
+  let evenSteps: Record<string, boolean> = {};
   let steps = 0;
-  while (steps < MAX_STEPS) {
+  while (steps < stepsToTake) {
+    nextLocations = steps % 2 === 0 ? oddSteps : evenSteps;
     for (let i = 0; i < locations.length; i++) {
       const loc = locations[i];
 
@@ -59,33 +45,36 @@ const part1 = (rawInput: string) => {
       add(nextLocations, [loc[0], loc[1] + 1], grid);
     }
 
-    locations = Object.keys(nextLocations).map(fromKey);
-    nextLocations = {};
+    let falseKeys = Object.keys(nextLocations).filter(
+      (loc) => nextLocations[loc] === false
+    );
+
+    locations = falseKeys.map(fromKey);
+
+    falseKeys.forEach((k) => {
+      nextLocations[k] = true;
+    });
+
     steps++;
   }
-  return locations.length;
+  return Object.keys(nextLocations).length;
+};
+
+const toKey = (ele: [number, number]) => ele.join(",");
+const fromKey = (key: string) => key.split(",").map(Number) as [number, number];
+
+const part1 = (rawInput: string) => {
+  const grid = rawInput.split("\n").map((line) => line.split(""));
+
+  let start = Math.floor(grid.length / 2);
+
+  return runSteps(grid, start, start, 64);
 };
 
 const part2 = (rawInput: string) => {
-  const input = parseInput(rawInput);
-
-  let startY = 0,
-    startX = 0;
-
-  let grid = input.split("\n").map((line, index) => {
-    let nLine = line;
-    if (line.includes("S")) {
-      startX = line.indexOf("S");
-      startY = index;
-    }
-
-    return nLine.repeat(5).split("");
-  });
-
-  let gridSize = grid.length;
-
-  startX += gridSize * 2;
-  startY += gridSize * 2;
+  let grid = rawInput.split("\n").map((line) => line.repeat(5).split(""));
+  const gridSize = grid.length;
+  let start = Math.floor(gridSize / 2) + gridSize * 2;
 
   grid = [...grid, ...grid, ...grid, ...grid, ...grid];
 
@@ -93,38 +82,7 @@ const part2 = (rawInput: string) => {
     Math.floor(gridSize * 0.5),
     Math.floor(gridSize * 1.5),
     Math.floor(gridSize * 2.5),
-  ].map((maxSteps) => {
-    let locations: [number, number][] = [[startX, startY]];
-    let nextLocations: Record<string, boolean>;
-    let oddSteps: Record<string, boolean> = {};
-    let evenSteps: Record<string, boolean> = {};
-    let steps = 0;
-    while (steps < maxSteps) {
-      nextLocations = steps % 2 === 0 ? oddSteps : evenSteps;
-      for (let i = 0; i < locations.length; i++) {
-        const loc = locations[i];
-
-        add(nextLocations, [loc[0] - 1, loc[1]], grid);
-        add(nextLocations, [loc[0] + 1, loc[1]], grid);
-
-        add(nextLocations, [loc[0], loc[1] - 1], grid);
-        add(nextLocations, [loc[0], loc[1] + 1], grid);
-      }
-
-      let falseKeys = Object.keys(nextLocations).filter(
-        (loc) => nextLocations[loc] === false
-      );
-
-      locations = falseKeys.map(fromKey);
-
-      falseKeys.forEach((k) => {
-        nextLocations[k] = true;
-      });
-
-      steps++;
-    }
-    return Object.keys(nextLocations).length;
-  });
+  ].map((maxSteps) => runSteps(grid, start, start, maxSteps));
 
   // determine quadratic a b c
   let c = y0;
