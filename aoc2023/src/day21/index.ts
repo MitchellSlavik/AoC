@@ -20,17 +20,10 @@ const add = (
   if (grid[ele[1]][ele[0]] === "#") {
     return;
   }
-  if (arr[toKey(ele)]) {
+  if (arr[toKey(ele)] !== undefined) {
     return;
   }
-  arr[toKey(ele)] = true;
-};
-
-const remapCoords = (ele: [number, number], height: number, width: number) => {
-  return [
-    (ele[0] % width) + (ele[0] < 0 ? width - 1 : 0),
-    (ele[1] % height) + (ele[1] < 0 ? height - 1 : 0),
-  ];
+  arr[toKey(ele)] = false;
 };
 
 const toKey = (ele: [number, number]) => ele.join(",");
@@ -102,9 +95,12 @@ const part2 = (rawInput: string) => {
     Math.floor(gridSize * 2.5),
   ].map((maxSteps) => {
     let locations: [number, number][] = [[startX, startY]];
-    let nextLocations: Record<string, boolean> = {};
+    let nextLocations: Record<string, boolean>;
+    let oddSteps: Record<string, boolean> = {};
+    let evenSteps: Record<string, boolean> = {};
     let steps = 0;
     while (steps < maxSteps) {
+      nextLocations = steps % 2 === 0 ? oddSteps : evenSteps;
       for (let i = 0; i < locations.length; i++) {
         const loc = locations[i];
 
@@ -115,11 +111,19 @@ const part2 = (rawInput: string) => {
         add(nextLocations, [loc[0], loc[1] + 1], grid);
       }
 
-      locations = Object.keys(nextLocations).map(fromKey);
-      nextLocations = {};
+      let falseKeys = Object.keys(nextLocations).filter(
+        (loc) => nextLocations[loc] === false
+      );
+
+      locations = falseKeys.map(fromKey);
+
+      falseKeys.forEach((k) => {
+        nextLocations[k] = true;
+      });
+
       steps++;
     }
-    return locations.length;
+    return Object.keys(nextLocations).length;
   });
 
   // determine quadratic a b c
