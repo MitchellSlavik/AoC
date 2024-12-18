@@ -1,0 +1,44 @@
+A mod 8 XOR 3 -> B
+A / 2^(A mod 8 XOR 3) -> C
+A / 8 -> A
+B XOR C XOR 5 -> out -- B and C need to have opposite last 3 bits
+JUMP to start if A isnt 0
+
+0: xxxx100000
+2: xxxxxx1010
+4: 000xxxx100
+5: x001xxx101
+6: xx010xx110
+7: xxx011x111
+
+110xxxx100 | 000
+xxxxxxx001 | 010
+xxxxxxx011 | 010
+xxxxxxx101 | 010
+xxxxxxx111 | 010
+
+111
+
+
+if c ends with 101
+b xor 011 = 010
+b = 001
+
+000 XOR 011 = 011 -- 0 XOR 3 = 3
+001 XOR 011 = 010 -- 1 XOR 3 = 2
+010 XOR 011 = 001 -- 2 XOR 3 = 1
+011 XOR 011 = 000 -- 3 XOR 3 = 0
+100 XOR 011 = 111 -- 4 XOR 3 = 7
+101 XOR 011 = 110 -- 5 XOR 3 = 6
+110 XOR 011 = 101 -- 6 XOR 3 = 5
+111 XOR 011 = 100 -- 7 XOR 3 = 4
+
+000 XOR 101 = 101 -- 0 XOR 5 = 5
+001 XOR 101 = 100 -- 1 XOR 5 = 4
+010 XOR 101 = 111 -- 2 XOR 5 = 7
+011 XOR 101 = 110 -- 3 XOR 5 = 6
+100 XOR 101 = 001 -- 4 XOR 5 = 1
+101 XOR 101 = 000 -- 5 XOR 5 = 0
+110 XOR 101 = 011 -- 6 XOR 5 = 3
+111 XOR 101 = 010 -- 7 XOR 5 = 2
+
