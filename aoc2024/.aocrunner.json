@@ -352,16 +352,20 @@
     },
     {
       "part1": {
-        "solved": false,
-        "result": null,
+        "solved": true,
+        "result": "53190357879014",
         "attempts": [],
-        "time": null
+        "time": 0.6994
       },
       "part2": {
-        "solved": false,
-        "result": null,
-        "attempts": [],
-        "time": null
+        "solved": true,
+        "result": "bks,hnd,nrn,tdv,tjp,z09,z16,z23",
+        "attempts": [
+          "bks,hnd,jfs,nrn,tdv,tjp,z00,z23",
+          "bks,hnd,nrn,tdv,tjp,z00,z16,z23",
+          "bks,hnd,nrn,tdv,tjp,z16,z23,z45"
+        ],
+        "time": 1.3039
       }
     },
     {
