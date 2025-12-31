@@ -19,7 +19,10 @@
     "aocrunner": "^1.10.0",
     "prettier": "^2.8.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mathjs": "^15.1.0",
+    "z3-solver": "^4.15.4"
+  },
   "engines": {
     "node": ">=16.13.0"
   }
